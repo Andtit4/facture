@@ -79,8 +79,10 @@ export default function LoginScreen() {
       const response = await AuthApi.login(email.trim(), password);
       
       if (response?.access_token) {
-        await AsyncStorage.setItem('token', response.access_token);
-        router.navigate('/home/presentation/HomeScreen');
+        await AsyncStorage.setItem('token', response.access_token).then(() => {
+          // console.log('Token saved successfully:', response.access_token);
+          router.navigate('/home/presentation/HomeScreen');
+        });
       } else {
         setShowError(true);
         setErrorMessage('Identifiants invalides');

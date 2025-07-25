@@ -86,23 +86,21 @@ export default function RegisterScreen() {
     setErrorMessage("");
 
     try {
-      const response = await AuthApi.login(email.trim(), password);
-      
-      if (response?.access_token) {
-        await AsyncStorage.setItem('token', response.access_token);
-        router.navigate('/home/presentation/HomeScreen');
-      } else {
+      const response = await AuthApi.register(email, username, password);
+      console.log('Inscription réussie:', response);
+      if (response.email) {
+        // Enregistrer le token dans AsyncStorage
+        // await AsyncStorage.setItem('token', response.data.token);
+        // Rediriger vers l'écran d'accueil
+        Alert.alert('Succès', 'Inscription réussie !');
+        setIsLoading(false);
+        router.replace('/login/presentation/Login'); // Redirection vers l'écran d'accueil
+      } 
+    }catch (error) {
+        console.error('Erreur lors de l\'inscription:', error);
         setShowError(true);
-        setErrorMessage('Identifiants invalides');
-      }
-    } catch (error) {
-      console.error('Erreur de connexion:', error);
-      setShowError(true);
-      setErrorMessage('Erreur de connexion. Veuillez réessayer.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        setErrorMessage("Une erreur s'est produite lors de l'inscription.");
+      }}
 
   const handleForgotPassword = () => {
     Alert.alert(

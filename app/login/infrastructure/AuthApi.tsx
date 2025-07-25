@@ -14,6 +14,16 @@ export  class AuthApi implements ILoginRepository {
         }
     }
 
+    static async register(email: string, username: string, password: string): Promise<User> {
+        try {
+            const response = await api.post('/auth/register', { email, username, password });
+            return response.data as User;
+        } catch (error) {
+            console.error('Registration error:', error);
+            throw error;
+        }
+    }
+
     /* static async Login(email: string, password: string): Promise<User> {
         try {
             const response = await api.post('/auth/login', { email, password });
