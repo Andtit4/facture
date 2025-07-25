@@ -5,7 +5,6 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
-import LoginScreen from './login/presentation/Login';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -14,13 +13,17 @@ export default function RootLayout() {
   });
 
   if (!loaded) {
-    // Async font loading only occurs in development.
     return null;
   }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <LoginScreen />
+      <Stack>
+        {/* Le nom doit être le chemin relatif SANS .tsx */}
+        <Stack.Screen name="login/presentation/Login" options={{ title: "Connexion" }} />
+        <Stack.Screen name="home/presentation/HomeScreen" options={{ title: "Accueil" }} />
+        <Stack.Screen name="login/presentation/RegisterScreen" options={{ title: "Inscription" }} />
+      </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
   );
