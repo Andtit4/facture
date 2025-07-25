@@ -76,7 +76,7 @@ export default function LoginScreen() {
     setErrorMessage("");
 
     try {
-      const response = await AuthApi.Login(email.trim(), password);
+      const response = await AuthApi.login(email.trim(), password);
       
       if (response?.access_token) {
         await AsyncStorage.setItem('token', response.access_token);

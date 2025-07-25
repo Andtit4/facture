@@ -20,9 +20,9 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         {/* Le nom doit être le chemin relatif SANS .tsx */}
-        <Stack.Screen name="login/presentation/Login" options={{ title: "Connexion" }} />
-        <Stack.Screen name="home/presentation/HomeScreen" options={{ title: "Accueil" }} />
-        <Stack.Screen name="login/presentation/RegisterScreen" options={{ title: "Inscription" }} />
+        <Stack.Screen name="login/presentation/Login" options={{ title: "Connexion", headerShown: false }} />
+        <Stack.Screen name="home/presentation/HomeScreen" options={{ title: "Accueil", headerShown: false }}  />
+        <Stack.Screen name="login/presentation/RegisterScreen" options={{ title: "Inscription", headerShown: false }}  />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
