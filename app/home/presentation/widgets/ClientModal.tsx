@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Modal, 
   View, 
@@ -12,29 +12,77 @@ import {
   ScrollView
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { HomeApi } from '../../infrastructure/HomeApi';
+import { Customer } from '../../domain/model/Customers';
 
 const ClientModal = ({ visible, onClose }) => {
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [telephone, setTelephone] = useState('');
-  const [clients, setClients] = useState([
-    {id: '1', nom: 'Dupont', prenom: 'Jean', telephone: '514-123-4567'},
-    {id: '2', nom: 'Tremblay', prenom: 'Marie', telephone: '438-555-1234'},
+  type ClientItem = {
+    id: string;
+    nom: string;
+    prenom: string;
+    telephone: string;
+  };
+
+  const [clients, setClients] = useState<ClientItem[]>([
+    /* {id: '1', nom: 'Dupont', prenom: 'Jean', telephone: '514-123-4567'},
+    {id: '2', nom: 'Tremblay', prenom: 'Marie', telephone: '438-555-1234'}, */
   ]);
 
-  const handleAjouterClient = () => {
+  const customer: Customer = new Customer(Math.random(), nom, prenom, telephone);
+
+  const handleAjouterClient = async () => {
     if (nom && prenom && telephone) {
-      setClients([...clients, {
-        id: Date.now().toString(),
-        nom,
-        prenom,
-        telephone
-      }]);
-      setNom('');
-      setPrenom('');
-      setTelephone('');
+      try {
+        const newClient = await HomeApi.createCustomer(customer);
+        setClients([
+          ...clients,
+          {
+            id: String(newClient.id),
+            nom: newClient.name,
+            prenom: newClient.firstname,
+            telephone: newClient.phone,
+          },
+        ]);
+        setNom('');
+        setPrenom('');
+        setTelephone('');
+
+        // Refresh the client list after adding
+        const response = await HomeApi.getCustomers();
+        const adaptedClients = response.map((c: Customer) => ({
+          id: String(c.id),
+          nom: c.name,
+          prenom: c.firstname,
+          telephone: c.phone,
+        }));
+        setClients(adaptedClients);
+      } catch (error) {
+        console.error('Error adding client:', error);
+      }
     }
   };
+
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const response = await HomeApi.getCustomers();
+        const adaptedClients = response.map((c: Customer) => ({
+          id: String(c.id),
+          nom: c.name,
+          prenom: c.firstname,
+          telephone: c.phone,
+        }));
+        setClients(adaptedClients);
+      } catch (error) {
+        console.error('Error fetching clients:', error);
+      }
+    };
+
+    fetchClients();
+  }, []);
 
   return (
     <Modal
