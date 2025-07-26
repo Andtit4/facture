@@ -17,6 +17,7 @@ import {
 import { HomeApi } from '../infrastructure/HomeApi';
 import User from '@/app/login/domain/entities/User';
 import ClientModal from './widgets/ClientModal';
+import * as Haptics from 'expo-haptics';
 
 const { width } = Dimensions.get('window');
 
@@ -101,10 +102,10 @@ export default function BillingApp() {
     ];
 
     const quickActions = [
-        { icon: 'plus', label: 'Nouvelle facture', color: '#6366f1', onPress: () => console.log('Nouvelle facture') },
-        { icon: 'users', label: 'Ajouter client', color: '#ec4899', onPress: () => setModalAddClientVisible(true) },
-        { icon: 'shopping-cart', label: 'Gérer produits', color: '#10b981', onPress: () => console.log('Gérer produits') },
-        { icon: 'bar-chart', label: 'Analytics', color: '#f59e0b', onPress: () => console.log('Analytics') }
+        { icon: 'plus', label: 'Nouvelle facture', color: '#6366f1', onPress: () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),  console.log('Nouvelle facture')} },
+        { icon: 'users', label: 'Ajouter client', color: '#ec4899', onPress: () =>  { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), setModalAddClientVisible(true)} },
+        { icon: 'shopping-cart', label: 'Gérer produits', color: '#10b981', onPress: () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), console.log('Gérer produits')} },
+        { icon: 'bar-chart', label: 'Analytics', color: '#f59e0b', onPress: () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), console.log('Analytics')} }
     ];
 
     const recentInvoices = [

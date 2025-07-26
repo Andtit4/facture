@@ -14,6 +14,7 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { HomeApi } from '../../infrastructure/HomeApi';
 import { Customer } from '../../domain/model/Customers';
+import * as Haptics from 'expo-haptics';
 
 const ClientModal = ({ visible, onClose }) => {
   const [nom, setNom] = useState('');
@@ -34,6 +35,7 @@ const ClientModal = ({ visible, onClose }) => {
   const customer: Customer = new Customer(Math.random(), nom, prenom, telephone);
 
   const handleAjouterClient = async () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     if (nom && prenom && telephone) {
       try {
         const newClient = await HomeApi.createCustomer(customer);
