@@ -13,6 +13,7 @@ export class HomeApi implements IHomeRepository {
             throw error;
         }
     }
+
     static async createCustomer(customer: Customer): Promise<Customer> {
         try {
             const response = await api.post('/customers/create', customer);
@@ -22,6 +23,7 @@ export class HomeApi implements IHomeRepository {
             throw error;
         }
     }
+
     static async getCustomers(): Promise<Customer[]> {
         try {
             const response = await api.get('/customers');
@@ -31,6 +33,24 @@ export class HomeApi implements IHomeRepository {
             throw error;
         }
     }
- 
 
+    static async getInvoices(): Promise<any[]> {
+        try {
+            const response = await api.get('/invoices');
+            return response.data as any[];
+        } catch (error) {
+            console.error('Error fetching invoices:', error);
+            throw error;
+        }
+    }
+
+    static async getProducts(): Promise<any[]> {
+        try {
+            const response = await api.get('/products');
+            return response.data as any[];
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            throw error;
+        }
+    }
 }

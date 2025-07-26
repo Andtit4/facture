@@ -18,7 +18,8 @@ import { HomeApi } from '../infrastructure/HomeApi';
 import User from '@/app/login/domain/entities/User';
 import ClientModal from './widgets/ClientModal';
 import * as Haptics from 'expo-haptics';
-
+import { RefreshControl } from 'react-native';
+import ProductModal from './widgets/ProductModal';
 const { width } = Dimensions.get('window');
 
 // Composant d'icône simple pour remplacer Lucide
@@ -50,8 +51,19 @@ export default function BillingApp() {
     const [isLoaded, setIsLoaded] = useState(false);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [modalAddClientVisible, setModalAddClientVisible] = useState(false);
+    const [modalAddProducttVisible, setModalAddProducttVisible] = useState(false);
+
+    const [recentInvoices, setRecentInvoices] = useState<any[]>([]);
+    const [refreshing, setRefreshing] = useState(false);
 
     const router = useRouter();
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await HomeApi.getCurrentUser().then(setCurrentUser);
+        await HomeApi.getInvoices().then(setRecentInvoices);
+        setRefreshing(false);
+    }
 
     useEffect(() => {
         Animated.parallel([
@@ -68,6 +80,7 @@ export default function BillingApp() {
         ]).start();
         setIsLoaded(true);
         HomeApi.getCurrentUser().then(setCurrentUser);
+        HomeApi.getInvoices().then(setRecentInvoices);
     }, []);
 
     const stats = [
@@ -102,17 +115,17 @@ export default function BillingApp() {
     ];
 
     const quickActions = [
-        { icon: 'plus', label: 'Nouvelle facture', color: '#6366f1', onPress: () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),  console.log('Nouvelle facture')} },
-        { icon: 'users', label: 'Ajouter client', color: '#ec4899', onPress: () =>  { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), setModalAddClientVisible(true)} },
-        { icon: 'shopping-cart', label: 'Gérer produits', color: '#10b981', onPress: () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), console.log('Gérer produits')} },
-        { icon: 'bar-chart', label: 'Analytics', color: '#f59e0b', onPress: () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), console.log('Analytics')} }
+        { icon: 'plus', label: 'Nouvelle facture', color: '#6366f1', onPress: () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), console.log('Nouvelle facture') } },
+        { icon: 'users', label: 'Ajouter client', color: '#ec4899', onPress: () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), setModalAddClientVisible(true) } },
+        { icon: 'shopping-cart', label: 'Gérer produits', color: '#10b981', onPress: () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), setModalAddProducttVisible(true) } },
+        { icon: 'bar-chart', label: 'Analytics', color: '#f59e0b', onPress: () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), console.log('Analytics') } }
     ];
 
-    const recentInvoices = [
+    /* const recentInvoices = [
         { id: 'INV-001', client: 'Entreprise ABC', amount: '€1,250', status: 'payée', date: '25 Jul' },
         { id: 'INV-002', client: 'Studio XYZ', amount: '€850', status: 'en attente', date: '24 Jul' },
         { id: 'INV-003', client: 'Société DEF', amount: '€2,100', status: 'brouillon', date: '23 Jul' }
-    ];
+    ]; */
 
     const getStatusStyle = (status) => {
         switch (status) {
@@ -195,6 +208,8 @@ export default function BillingApp() {
 
                     {/* Modal d'ajout de client */}
                     <ClientModal visible={modalAddClientVisible} onClose={() => setModalAddClientVisible(false)} />;
+                    {/* Modal d'ajout de produit */}
+                    <ProductModal visible={modalAddProducttVisible} onClose={() => setModalAddProducttVisible(false)} />;
 
                     <View style={styles.headerContent}>
                         <View>
@@ -226,6 +241,9 @@ export default function BillingApp() {
                 <ScrollView
                     style={styles.scrollView}
                     showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    }
                 >
                     {/* Welcome Section */}
                     <Animated.View
@@ -294,15 +312,15 @@ export default function BillingApp() {
                                                 <Icon name="file-text" size={16} color="white" />
                                             </View>
                                             <View>
-                                                <Text style={styles.invoiceId}>{invoice.id}</Text>
-                                                <Text style={styles.invoiceClient}>{invoice.client}</Text>
+                                                <Text style={styles.invoiceId}>{invoice.invoice_number}</Text>
+                                                <Text style={styles.invoiceClient}>{invoice.customer.firstname} {invoice.customer.name}</Text>
                                             </View>
                                         </View>
 
                                         <View style={styles.invoiceRight}>
                                             <View style={styles.invoiceAmountContainer}>
-                                                <Text style={styles.invoiceAmount}>{invoice.amount}</Text>
-                                                <Text style={styles.invoiceDate}>{invoice.date}</Text>
+                                                <Text style={styles.invoiceAmount}>{invoice.total_amount} {invoice.currency}</Text>
+                                                <Text style={styles.invoiceDate}>{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString('fr-FR') : ''}</Text>
                                             </View>
                                             <View style={[styles.statusBadge, getStatusStyle(invoice.status)]}>
                                                 <Text style={[styles.statusText, { color: getStatusStyle(invoice.status).color }]}>
