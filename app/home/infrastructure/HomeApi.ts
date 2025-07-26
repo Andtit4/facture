@@ -2,6 +2,7 @@ import { api } from "@/app/services/api";
 import { IHomeRepository } from "../domain/repository/IHomeRepository";
 import User from "@/app/login/domain/entities/User";
 import { Customer } from "../domain/model/Customers";
+import { Product } from "../domain/model/Product";
 
 export class HomeApi implements IHomeRepository {
     static async getCurrentUser(): Promise<User> {
@@ -50,6 +51,16 @@ export class HomeApi implements IHomeRepository {
             return response.data as any[];
         } catch (error) {
             console.error('Error fetching products:', error);
+            throw error;
+        }
+    }
+
+    static async createProduct(product: Product): Promise<Product> {
+        try {
+            const response = await api.post('/products', product);
+            return response.data as Product;
+        } catch (error) {
+            console.error('Error creating product:', error);
             throw error;
         }
     }
