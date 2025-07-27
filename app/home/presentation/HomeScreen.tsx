@@ -121,386 +121,434 @@ export default function BillingApp() {
                 invoiceData.invoice_number,
                 invoiceData.status,
                 invoiceData.total_amount,
+                invoiceData.currency,
                 invoiceData.customer_id,
-                new Date(invoiceData.issue_date),
+                new Date(invoiceData.issued_at),
                 new Date(invoiceData.due_date)
             );
 
             const invoiceItem = new InvoiceItem(
                 Math.random(), // ID aléatoire pour l'exemple
-                invoiceData.invoice_id,
-                invoiceData.product_id,
-                invoiceData.quantity,
-                invoiceData.unit_price
+                invoiceData.invoice_number,
+                invoiceData.items.product_id,
+                invoiceData.items.quantity,
+                invoiceData.items.unit_price
+            );
+            const response = await HomeApi.createInvoice(invoice);
+
+            console.log('Données de la facture:', invoiceData.items.length);
+            for (const item of invoiceData.items) {
+                const invoiceItem = new InvoiceItem(
+                    Math.random(), // ID aléatoire pour l'exemple
+                    invoiceData.invoice_number,
+                    item.product_id,
+                    item.quantity,
+                    item.unit_price
+                );
+                console.log('Item:', invoiceItem);
+                const res = await HomeApi.createInvoiceItem(invoiceItem)
+                 console.log('Item créé:', res);
+
+                /* const invoiceItem = new InvoiceItem(
+                    Math.random(), // ID aléatoire pour l'exemple
+                    item.invoice_id,
+                    item.product_id,
+                    item.quantity,
+                    item.unit_price
+                );
+                console.log('Item:', item);
+                const res = await HomeApi.createInvoiceItem(invoiceItem) */
+                // console.log('Item créé:', res);
+            }
+        
+            /* const invoice = new Invoice(
+                Math.random(), // ID aléatoire pour l'exemple
+                invoiceData.invoice_number,
+                invoiceData.status,
+                invoiceData.total_amount,
+                invoiceData.currency,
+                invoiceData.customer_id,
+                new Date(invoiceData.issued_at),
+                new Date(invoiceData.due_date)
+            );
+
+            const invoiceItem = new InvoiceItem(
+                Math.random(), // ID aléatoire pour l'exemple
+                invoiceData.invoice_number,
+                invoiceData.items.product_id,
+                invoiceData.items.quantity,
+                invoiceData.items.unit_price
 
             )
             const response = await HomeApi.createInvoice(invoice);
+            const res = await HomeApi.createInvoiceItem(invoiceItem)
 
             console.log('Facture créée:', response);
+            console.log('items créée:', res); */
 
-            const res = await HomeApi.createInvoiceItem(invoiceItem)
+
         } catch (error) {
-            console.error('Erreur:', error);
+        console.error('Erreur:', error);
+    }
+};
+
+useEffect(() => {
+    Animated.parallel([
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 800,
+            useNativeDriver: true,
+        }),
+    ]).start();
+    setIsLoaded(true);
+    HomeApi.getCurrentUser().then(setCurrentUser);
+    HomeApi.getInvoices().then(setRecentInvoices);
+    HomeApi.getCustomers().then(setCustomers);
+    HomeApi.getProducts().then(setProducts);
+}, [fadeAnim, slideAnim]);
+
+const stats = [
+    {
+        icon: 'dollar-sign',
+        label: 'Revenus ce mois',
+        value: '€12,450',
+        change: '+12%',
+        color: '#10b981'
+    },
+    {
+        icon: 'file-text',
+        label: 'Factures créées',
+        value: '156',
+        change: '+8%',
+        color: '#3b82f6'
+    },
+    {
+        icon: 'users',
+        label: 'Clients actifs',
+        value: '89',
+        change: '+15%',
+        color: '#8b5cf6'
+    },
+    {
+        icon: 'credit-card',
+        label: 'Paiements reçus',
+        value: '142',
+        change: '+5%',
+        color: '#f59e0b'
+    }
+];
+
+const quickActions = useMemo(() => [
+    {
+        icon: 'plus',
+        label: 'Nouvelle facture',
+        color: '#6366f1',
+        onPress: () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setModalInvoiceVisible(true);
         }
-    };
+    },
+    {
+        icon: 'users',
+        label: 'Ajouter client',
+        color: '#ec4899',
+        onPress: () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setModalAddClientVisible(true);
+        }
+    },
+    {
+        icon: 'shopping-cart',
+        label: 'Gérer produits',
+        color: '#10b981',
+        onPress: () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setModalAddProducttVisible(true);
+        }
+    },
+], []);
+
+/* const recentInvoices = [
+    { id: 'INV-001', client: 'Entreprise ABC', amount: '€1,250', status: 'payée', date: '25 Jul' },
+    { id: 'INV-002', client: 'Studio XYZ', amount: '€850', status: 'en attente', date: '24 Jul' },
+    { id: 'INV-003', client: 'Société DEF', amount: '€2,100', status: 'brouillon', date: '23 Jul' }
+]; */
+
+const getStatusStyle = (status) => {
+    switch (status) {
+        case 'payée':
+            return { backgroundColor: '#d1fae5', color: '#065f46' };
+        case 'en attente':
+            return { backgroundColor: '#fef3c7', color: '#92400e' };
+        case 'brouillon':
+            return { backgroundColor: '#f3f4f6', color: '#374151' };
+        default:
+            return { backgroundColor: '#f3f4f6', color: '#374151' };
+    }
+};
+
+const StatCard = ({ stat, index }) => {
+    const [cardAnim] = useState(new Animated.Value(0));
 
     useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 800,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 800,
-                useNativeDriver: true,
-            }),
-        ]).start();
-        setIsLoaded(true);
-        HomeApi.getCurrentUser().then(setCurrentUser);
-        HomeApi.getInvoices().then(setRecentInvoices);
-        HomeApi.getCustomers().then(setCustomers);
-        HomeApi.getProducts().then(setProducts);
-    }, [fadeAnim, slideAnim]);
+        Animated.timing(cardAnim, {
+            toValue: 1,
+            duration: 600,
+            delay: index * 100,
+            useNativeDriver: true,
+        }).start();
+    }, []);
 
-    const stats = [
-        {
-            icon: 'dollar-sign',
-            label: 'Revenus ce mois',
-            value: '€12,450',
-            change: '+12%',
-            color: '#10b981'
-        },
-        {
-            icon: 'file-text',
-            label: 'Factures créées',
-            value: '156',
-            change: '+8%',
-            color: '#3b82f6'
-        },
-        {
-            icon: 'users',
-            label: 'Clients actifs',
-            value: '89',
-            change: '+15%',
-            color: '#8b5cf6'
-        },
-        {
-            icon: 'credit-card',
-            label: 'Paiements reçus',
-            value: '142',
-            change: '+5%',
-            color: '#f59e0b'
-        }
-    ];
+    return (
+        <Animated.View
+            style={[
+                styles.statCard,
+                {
+                    opacity: cardAnim,
+                    transform: [{
+                        translateY: cardAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [30, 0],
+                        }),
+                    }],
+                },
+            ]}
+        >
+            <TouchableOpacity style={styles.statCardContent}>
+                <View style={styles.statHeader}>
+                    <View style={[styles.statIcon, { backgroundColor: stat.color }]}>
+                        <Icon name={stat.icon} size={20} color="white" />
+                    </View>
+                    <Text style={styles.statChange}>{stat.change}</Text>
+                </View>
+                <Text style={styles.statValue}>{stat.value}</Text>
+                <Text style={styles.statLabel}>{stat.label}</Text>
+            </TouchableOpacity>
+        </Animated.View>
+    );
+};
 
-    const quickActions = useMemo(() => [
-        {
-            icon: 'plus',
-            label: 'Nouvelle facture',
-            color: '#6366f1',
-            onPress: () => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setModalInvoiceVisible(true);
-            }
-        },
-        {
-            icon: 'users',
-            label: 'Ajouter client',
-            color: '#ec4899',
-            onPress: () => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setModalAddClientVisible(true);
-            }
-        },
-        {
-            icon: 'shopping-cart',
-            label: 'Gérer produits',
-            color: '#10b981',
-            onPress: () => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setModalAddProducttVisible(true);
-            }
-        },
-    ], []);
+const QuickActionButton = ({ action, index }) => (
+    <TouchableOpacity style={styles.quickActionButton} onPress={() => action.onPress()}>
+        <View style={[styles.quickActionContent, { backgroundColor: action.color }]}>
+            <Icon name={action.icon} size={28} color="white" />
+            <Text style={styles.quickActionLabel}>{action.label}</Text>
+        </View>
+    </TouchableOpacity>
+);
 
-    /* const recentInvoices = [
-        { id: 'INV-001', client: 'Entreprise ABC', amount: '€1,250', status: 'payée', date: '25 Jul' },
-        { id: 'INV-002', client: 'Studio XYZ', amount: '€850', status: 'en attente', date: '24 Jul' },
-        { id: 'INV-003', client: 'Société DEF', amount: '€2,100', status: 'brouillon', date: '23 Jul' }
-    ]; */
+return (
+    <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
 
-    const getStatusStyle = (status) => {
-        switch (status) {
-            case 'payée':
-                return { backgroundColor: '#d1fae5', color: '#065f46' };
-            case 'en attente':
-                return { backgroundColor: '#fef3c7', color: '#92400e' };
-            case 'brouillon':
-                return { backgroundColor: '#f3f4f6', color: '#374151' };
-            default:
-                return { backgroundColor: '#f3f4f6', color: '#374151' };
-        }
-    };
-
-    const StatCard = ({ stat, index }) => {
-        const [cardAnim] = useState(new Animated.Value(0));
-
-        useEffect(() => {
-            Animated.timing(cardAnim, {
-                toValue: 1,
-                duration: 600,
-                delay: index * 100,
-                useNativeDriver: true,
-            }).start();
-        }, []);
-
-        return (
+        <View style={styles.gradient}>
+            {/* Header */}
             <Animated.View
                 style={[
-                    styles.statCard,
+                    styles.header,
                     {
-                        opacity: cardAnim,
-                        transform: [{
-                            translateY: cardAnim.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [30, 0],
-                            }),
-                        }],
+                        opacity: fadeAnim,
+                        transform: [{ translateY: slideAnim }],
                     },
                 ]}
             >
-                <TouchableOpacity style={styles.statCardContent}>
-                    <View style={styles.statHeader}>
-                        <View style={[styles.statIcon, { backgroundColor: stat.color }]}>
-                            <Icon name={stat.icon} size={20} color="white" />
-                        </View>
-                        <Text style={styles.statChange}>{stat.change}</Text>
+
+                {/* Modal d'ajout de client */}
+                <ClientModal visible={modalAddClientVisible} onClose={() => setModalAddClientVisible(false)} />;
+                {/* Modal d'ajout de produit */}
+                <ProductModal
+                    visible={modalAddProducttVisible}
+                    onClose={() => setModalAddProducttVisible(false)}
+                /><CompleteInvoiceModal
+                    visible={modalInvoiceVisible}
+                    customers={customers}
+                    products={products}
+                    onClose={() => setModalInvoiceVisible(false)}
+                    onCreateInvoice={handleCreateInvoice}
+                />
+
+                <View style={styles.headerContent}>
+                    <View>
+                        <Text style={styles.title}>FacturePro</Text>
+                        <Text style={styles.subtitle}>Tableau de bord</Text>
                     </View>
-                    <Text style={styles.statValue}>{stat.value}</Text>
-                    <Text style={styles.statLabel}>{stat.label}</Text>
-                </TouchableOpacity>
+
+                    <View style={styles.headerActions}>
+                        <TouchableOpacity style={styles.searchContainer}>
+                            <Icon name="search" size={16} color="#9ca3af" />
+                            <TextInput
+                                placeholder="Rechercher..."
+                                style={styles.searchInput}
+                                placeholderTextColor="#9ca3af"
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => {
+                            AsyncStorage.setItem('token', '').then(() => {
+                                router.replace('/login/presentation/Login');
+                            })
+                        }} style={styles.notificationButton}>
+                            <Icon name="bell" size={20} color="#6b7280" />
+                            <View style={styles.notificationBadge} />
+                        </TouchableOpacity>
+                    </View>
+                </View>
             </Animated.View>
-        );
-    };
 
-    const QuickActionButton = ({ action, index }) => (
-        <TouchableOpacity style={styles.quickActionButton} onPress={() => action.onPress()}>
-            <View style={[styles.quickActionContent, { backgroundColor: action.color }]}>
-                <Icon name={action.icon} size={28} color="white" />
-                <Text style={styles.quickActionLabel}>{action.label}</Text>
-            </View>
-        </TouchableOpacity>
-    );
-
-    return (
-        <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
-
-            <View style={styles.gradient}>
-                {/* Header */}
+            <ScrollView
+                style={styles.scrollView}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+            >
+                {/* Welcome Section */}
                 <Animated.View
                     style={[
-                        styles.header,
+                        styles.welcomeSection,
                         {
                             opacity: fadeAnim,
                             transform: [{ translateY: slideAnim }],
                         },
                     ]}
                 >
+                    <Text style={styles.welcomeTitle}>Bonjour ! {currentUser?.username} 👋</Text>
+                    <Text style={styles.welcomeSubtitle}>
+                        Voici un aperçu de votre activité aujourd'hui
+                    </Text>
+                </Animated.View>
 
-                    {/* Modal d'ajout de client */}
-                    <ClientModal visible={modalAddClientVisible} onClose={() => setModalAddClientVisible(false)} />;
-                    {/* Modal d'ajout de produit */}
-                    <ProductModal
-                        visible={modalAddProducttVisible}
-                        onClose={() => setModalAddProducttVisible(false)}
-                    /><CompleteInvoiceModal
-                        visible={modalInvoiceVisible}
-                        customers={customers}
-                        products={products}
-                        onClose={() => setModalInvoiceVisible(false)}
-                        onCreateInvoice={handleCreateInvoice}
-                    />
+                {/* Stats Cards */}
+                <View style={styles.statsContainer}>
+                    {stats.map((stat, index) => (
+                        <StatCard key={stat.label} stat={stat} index={index} />
+                    ))}
+                </View>
 
-                    <View style={styles.headerContent}>
-                        <View>
-                            <Text style={styles.title}>FacturePro</Text>
-                            <Text style={styles.subtitle}>Tableau de bord</Text>
+                {/* Quick Actions */}
+                <Animated.View
+                    style={[
+                        styles.quickActionsSection,
+                        {
+                            opacity: fadeAnim,
+                            transform: [{ translateY: slideAnim }],
+                        },
+                    ]}
+                >
+                    <Text style={styles.sectionTitle}>Actions rapides</Text>
+                    <View style={styles.quickActionsGrid}>
+                        {quickActions.map((action, index) => (
+                            <QuickActionButton key={action.label} action={action} index={index} />
+                        ))}
+                    </View>
+                </Animated.View>
+
+                {/* Recent Invoices */}
+                <Animated.View
+                    style={[
+                        styles.invoicesSection,
+                        {
+                            opacity: fadeAnim,
+                            transform: [{ translateY: slideAnim }],
+                        },
+                    ]}
+                >
+                    <View style={styles.invoicesCard}>
+                        <View style={styles.invoicesHeader}>
+                            <Text style={styles.sectionTitle}>Factures récentes</Text>
+                            <TouchableOpacity>
+                                <Text style={styles.seeAllButton}>Voir tout</Text>
+                            </TouchableOpacity>
                         </View>
 
-                        <View style={styles.headerActions}>
-                            <TouchableOpacity style={styles.searchContainer}>
-                                <Icon name="search" size={16} color="#9ca3af" />
-                                <TextInput
-                                    placeholder="Rechercher..."
-                                    style={styles.searchInput}
-                                    placeholderTextColor="#9ca3af"
-                                />
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => {
-                                AsyncStorage.setItem('token', '').then(() => {
-                                    router.replace('/login/presentation/Login');
-                                })
-                            }} style={styles.notificationButton}>
-                                <Icon name="bell" size={20} color="#6b7280" />
-                                <View style={styles.notificationBadge} />
-                            </TouchableOpacity>
+                        <View style={styles.invoicesList}>
+                            {recentInvoices.map((invoice, index) => (
+                                <TouchableOpacity key={invoice.id} style={styles.invoiceItem}>
+                                    <View style={styles.invoiceLeft}>
+                                        <View style={styles.invoiceIcon}>
+                                            <Icon name="file-text" size={16} color="white" />
+                                        </View>
+                                        <View>
+                                            <Text style={styles.invoiceId}>{invoice.invoice_number}</Text>
+                                            <Text style={styles.invoiceClient}>{invoice.customer.firstname} {invoice.customer.name}</Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={styles.invoiceRight}>
+                                        <View style={styles.invoiceAmountContainer}>
+                                            <Text style={styles.invoiceAmount}>{invoice.total_amount} {invoice.currency}</Text>
+                                            <Text style={styles.invoiceDate}>{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString('fr-FR') : ''}</Text>
+                                        </View>
+                                        <View style={[styles.statusBadge, getStatusStyle(invoice.status)]}>
+                                            <Text style={[styles.statusText, { color: getStatusStyle(invoice.status).color }]}>
+                                                {invoice.status}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
                         </View>
                     </View>
                 </Animated.View>
 
-                <ScrollView
-                    style={styles.scrollView}
-                    showsVerticalScrollIndicator={false}
-                    refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                    }
+                {/* Chart Preview */}
+                <Animated.View
+                    style={[
+                        styles.chartSection,
+                        {
+                            opacity: fadeAnim,
+                            transform: [{ translateY: slideAnim }],
+                        },
+                    ]}
                 >
-                    {/* Welcome Section */}
-                    <Animated.View
-                        style={[
-                            styles.welcomeSection,
-                            {
-                                opacity: fadeAnim,
-                                transform: [{ translateY: slideAnim }],
-                            },
-                        ]}
-                    >
-                        <Text style={styles.welcomeTitle}>Bonjour ! {currentUser?.username} 👋</Text>
-                        <Text style={styles.welcomeSubtitle}>
-                            Voici un aperçu de votre activité aujourd'hui
-                        </Text>
-                    </Animated.View>
-
-                    {/* Stats Cards */}
-                    <View style={styles.statsContainer}>
-                        {stats.map((stat, index) => (
-                            <StatCard key={stat.label} stat={stat} index={index} />
-                        ))}
-                    </View>
-
-                    {/* Quick Actions */}
-                    <Animated.View
-                        style={[
-                            styles.quickActionsSection,
-                            {
-                                opacity: fadeAnim,
-                                transform: [{ translateY: slideAnim }],
-                            },
-                        ]}
-                    >
-                        <Text style={styles.sectionTitle}>Actions rapides</Text>
-                        <View style={styles.quickActionsGrid}>
-                            {quickActions.map((action, index) => (
-                                <QuickActionButton key={action.label} action={action} index={index} />
-                            ))}
-                        </View>
-                    </Animated.View>
-
-                    {/* Recent Invoices */}
-                    <Animated.View
-                        style={[
-                            styles.invoicesSection,
-                            {
-                                opacity: fadeAnim,
-                                transform: [{ translateY: slideAnim }],
-                            },
-                        ]}
-                    >
-                        <View style={styles.invoicesCard}>
-                            <View style={styles.invoicesHeader}>
-                                <Text style={styles.sectionTitle}>Factures récentes</Text>
-                                <TouchableOpacity>
-                                    <Text style={styles.seeAllButton}>Voir tout</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                            <View style={styles.invoicesList}>
-                                {recentInvoices.map((invoice, index) => (
-                                    <TouchableOpacity key={invoice.id} style={styles.invoiceItem}>
-                                        <View style={styles.invoiceLeft}>
-                                            <View style={styles.invoiceIcon}>
-                                                <Icon name="file-text" size={16} color="white" />
-                                            </View>
-                                            <View>
-                                                <Text style={styles.invoiceId}>{invoice.invoice_number}</Text>
-                                                <Text style={styles.invoiceClient}>{invoice.customer.firstname} {invoice.customer.name}</Text>
-                                            </View>
-                                        </View>
-
-                                        <View style={styles.invoiceRight}>
-                                            <View style={styles.invoiceAmountContainer}>
-                                                <Text style={styles.invoiceAmount}>{invoice.total_amount} {invoice.currency}</Text>
-                                                <Text style={styles.invoiceDate}>{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString('fr-FR') : ''}</Text>
-                                            </View>
-                                            <View style={[styles.statusBadge, getStatusStyle(invoice.status)]}>
-                                                <Text style={[styles.statusText, { color: getStatusStyle(invoice.status).color }]}>
-                                                    {invoice.status}
-                                                </Text>
-                                            </View>
-                                        </View>
-                                    </TouchableOpacity>
+                    <View style={styles.chartCard}>
+                        <Text style={styles.sectionTitle}>Aperçu des revenus</Text>
+                        <View style={styles.chartContainer}>
+                            <View style={styles.chartBars}>
+                                {[40, 65, 45, 80, 55, 90, 70].map((height, index) => (
+                                    <Animated.View
+                                        key={index}
+                                        style={[
+                                            styles.chartBar,
+                                            {
+                                                height: `${height}%`,
+                                                opacity: fadeAnim,
+                                            }
+                                        ]}
+                                    />
                                 ))}
                             </View>
                         </View>
-                    </Animated.View>
-
-                    {/* Chart Preview */}
-                    <Animated.View
-                        style={[
-                            styles.chartSection,
-                            {
-                                opacity: fadeAnim,
-                                transform: [{ translateY: slideAnim }],
-                            },
-                        ]}
-                    >
-                        <View style={styles.chartCard}>
-                            <Text style={styles.sectionTitle}>Aperçu des revenus</Text>
-                            <View style={styles.chartContainer}>
-                                <View style={styles.chartBars}>
-                                    {[40, 65, 45, 80, 55, 90, 70].map((height, index) => (
-                                        <Animated.View
-                                            key={index}
-                                            style={[
-                                                styles.chartBar,
-                                                {
-                                                    height: `${height}%`,
-                                                    opacity: fadeAnim,
-                                                }
-                                            ]}
-                                        />
-                                    ))}
-                                </View>
-                            </View>
-                        </View>
-                    </Animated.View>
-
-                    {/* Bottom Navigation */}
-                    <View style={styles.bottomNav}>
-                        <TouchableOpacity style={[styles.navItem, styles.navItemActive]}>
-                            <Icon name="bar-chart" size={20} color="#6366f1" />
-                            <Text style={[styles.navText, styles.navTextActive]}>Accueil</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.navItem}>
-                            <Icon name="file-text" size={20} color="#9ca3af" />
-                            <Text style={styles.navText}>Factures</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.navItem}>
-                            <Icon name="users" size={20} color="#9ca3af" />
-                            <Text style={styles.navText}>Clients</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.navItem}>
-                            <Icon name="settings" size={20} color="#9ca3af" />
-                            <Text style={styles.navText}>Profil</Text>
-                        </TouchableOpacity>
                     </View>
-                </ScrollView>
-            </View>
-        </SafeAreaView>
-    );
+                </Animated.View>
+
+                {/* Bottom Navigation */}
+                <View style={styles.bottomNav}>
+                    <TouchableOpacity style={[styles.navItem, styles.navItemActive]}>
+                        <Icon name="bar-chart" size={20} color="#6366f1" />
+                        <Text style={[styles.navText, styles.navTextActive]}>Accueil</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.navItem}>
+                        <Icon name="file-text" size={20} color="#9ca3af" />
+                        <Text style={styles.navText}>Factures</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.navItem}>
+                        <Icon name="users" size={20} color="#9ca3af" />
+                        <Text style={styles.navText}>Clients</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.navItem}>
+                        <Icon name="settings" size={20} color="#9ca3af" />
+                        <Text style={styles.navText}>Profil</Text>
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
+        </View>
+    </SafeAreaView>
+);
 }
 
 const styles = StyleSheet.create({
