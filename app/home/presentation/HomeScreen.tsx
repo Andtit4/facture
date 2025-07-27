@@ -1,7 +1,7 @@
 // App.js
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
     View,
     Text,
@@ -20,6 +20,10 @@ import ClientModal from './widgets/ClientModal';
 import * as Haptics from 'expo-haptics';
 import { RefreshControl } from 'react-native';
 import ProductModal from './widgets/ProductModal';
+import InvoiceModal from './widgets/InvoiceModal';
+import CompleteInvoiceModal from './widgets/InvoiceModal';
+import { Invoice } from '../domain/model/Invoice';
+import { InvoiceItem } from '../domain/model/InvoiceItem';
 const { width } = Dimensions.get('window');
 
 // Composant d'icône simple pour remplacer Lucide
@@ -52,6 +56,9 @@ export default function BillingApp() {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [modalAddClientVisible, setModalAddClientVisible] = useState(false);
     const [modalAddProducttVisible, setModalAddProducttVisible] = useState(false);
+    const [modalInvoiceVisible, setModalInvoiceVisible] = useState(false);
+    const [customers, setCustomers] = useState<any[]>([]);
+    const [products, setProducts] = useState<any[]>([]);
 
     const [recentInvoices, setRecentInvoices] = useState<any[]>([]);
     const [refreshing, setRefreshing] = useState(false);
@@ -64,6 +71,78 @@ export default function BillingApp() {
         await HomeApi.getInvoices().then(setRecentInvoices);
         setRefreshing(false);
     }
+
+    // Ajouter ces useCallback dans votre composant :
+    const handleCreateInvoiceCallback = useCallback(async (invoiceData) => {
+        try {
+            const response = await HomeApi.createInvoice(invoiceData);
+
+            console.log('Facture créée:', response);
+            const updatedInvoices = await HomeApi.getInvoices();
+            setRecentInvoices(updatedInvoices);
+
+        } catch (error) {
+            console.error('Erreur:', error);
+        }
+    }, []);
+
+    const closeClientModal = useCallback(() => {
+        setModalAddClientVisible(false);
+    }, []);
+
+    const closeProductModal = useCallback(() => {
+        setModalAddProducttVisible(false);
+    }, []);
+
+    const closeInvoiceModal = useCallback(() => {
+        setModalInvoiceVisible(false);
+    }, []);
+
+    /*  public id: number,
+       public invoice_number: string,
+       public status: string,
+       public total_amount: number,
+       public customer_id: number,
+       public issue_date: Date,
+       public due_date: Date, */
+
+    /*     public id: number,
+  public invoice_id: number,
+  public product_id: number,
+  public quantity: number,
+  public unit_price: number,
+) {} */
+
+    const handleCreateInvoice = async (invoiceData) => {
+        try {
+            // Votre logique API ici
+            const invoice = new Invoice(
+                Math.random(), // ID aléatoire pour l'exemple
+                invoiceData.invoice_number,
+                invoiceData.status,
+                invoiceData.total_amount,
+                invoiceData.customer_id,
+                new Date(invoiceData.issue_date),
+                new Date(invoiceData.due_date)
+            );
+
+            const invoiceItem = new InvoiceItem(
+                Math.random(), // ID aléatoire pour l'exemple
+                invoiceData.invoice_id,
+                invoiceData.product_id,
+                invoiceData.quantity,
+                invoiceData.unit_price
+
+            )
+            const response = await HomeApi.createInvoice(invoice);
+
+            console.log('Facture créée:', response);
+
+            const res = await HomeApi.createInvoiceItem(invoiceItem)
+        } catch (error) {
+            console.error('Erreur:', error);
+        }
+    };
 
     useEffect(() => {
         Animated.parallel([
@@ -81,7 +160,9 @@ export default function BillingApp() {
         setIsLoaded(true);
         HomeApi.getCurrentUser().then(setCurrentUser);
         HomeApi.getInvoices().then(setRecentInvoices);
-    }, []);
+        HomeApi.getCustomers().then(setCustomers);
+        HomeApi.getProducts().then(setProducts);
+    }, [fadeAnim, slideAnim]);
 
     const stats = [
         {
@@ -114,12 +195,35 @@ export default function BillingApp() {
         }
     ];
 
-    const quickActions = [
-        { icon: 'plus', label: 'Nouvelle facture', color: '#6366f1', onPress: () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), console.log('Nouvelle facture') } },
-        { icon: 'users', label: 'Ajouter client', color: '#ec4899', onPress: () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), setModalAddClientVisible(true) } },
-        { icon: 'shopping-cart', label: 'Gérer produits', color: '#10b981', onPress: () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), setModalAddProducttVisible(true) } },
-        { icon: 'bar-chart', label: 'Analytics', color: '#f59e0b', onPress: () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), console.log('Analytics') } }
-    ];
+    const quickActions = useMemo(() => [
+        {
+            icon: 'plus',
+            label: 'Nouvelle facture',
+            color: '#6366f1',
+            onPress: () => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setModalInvoiceVisible(true);
+            }
+        },
+        {
+            icon: 'users',
+            label: 'Ajouter client',
+            color: '#ec4899',
+            onPress: () => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setModalAddClientVisible(true);
+            }
+        },
+        {
+            icon: 'shopping-cart',
+            label: 'Gérer produits',
+            color: '#10b981',
+            onPress: () => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setModalAddProducttVisible(true);
+            }
+        },
+    ], []);
 
     /* const recentInvoices = [
         { id: 'INV-001', client: 'Entreprise ABC', amount: '€1,250', status: 'payée', date: '25 Jul' },
@@ -209,7 +313,16 @@ export default function BillingApp() {
                     {/* Modal d'ajout de client */}
                     <ClientModal visible={modalAddClientVisible} onClose={() => setModalAddClientVisible(false)} />;
                     {/* Modal d'ajout de produit */}
-                    <ProductModal visible={modalAddProducttVisible} onClose={() => setModalAddProducttVisible(false)} />;
+                    <ProductModal
+                        visible={modalAddProducttVisible}
+                        onClose={() => setModalAddProducttVisible(false)}
+                    /><CompleteInvoiceModal
+                        visible={modalInvoiceVisible}
+                        customers={customers}
+                        products={products}
+                        onClose={() => setModalInvoiceVisible(false)}
+                        onCreateInvoice={handleCreateInvoice}
+                    />
 
                     <View style={styles.headerContent}>
                         <View>

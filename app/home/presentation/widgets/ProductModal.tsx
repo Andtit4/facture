@@ -43,6 +43,7 @@ const ProductModal = ({ visible, onClose, products, setProducts }) => {
             try {
                 const response = await HomeApi.getProducts();
                 setProductList(response || []); // S'assurer que response n'est pas null/undefined
+                // console.log('Produits récupérés:', product);
             } catch (error) {
                 console.error('Erreur lors de la récupération des produits:', error);
                 setProductList([]);

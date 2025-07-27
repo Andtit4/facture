@@ -3,6 +3,7 @@ import { IHomeRepository } from "../domain/repository/IHomeRepository";
 import User from "@/app/login/domain/entities/User";
 import { Customer } from "../domain/model/Customers";
 import { Product } from "../domain/model/Product";
+import { Invoice } from "../domain/model/Invoice";
 
 export class HomeApi implements IHomeRepository {
     static async getCurrentUser(): Promise<User> {
@@ -61,6 +62,40 @@ export class HomeApi implements IHomeRepository {
             return response.data as Product;
         } catch (error) {
             console.error('Error creating product:', error);
+            throw error;
+        }
+    }
+
+      /* public id: number,
+        public invoice_number: string,
+        public status: string,
+        public total_amount: number,
+        public customer_id: number,
+        public issue_date: Date,
+        public due_date: Date, */
+
+     /*    public id: number,
+    public invoice_id: number,
+    public product_id: number,
+    public quantity: number,
+    public unit_price: number, */
+    
+    static async createInvoice(invoice: Invoice): Promise<Invoice> {
+        try {
+            const response = await api.post('/invoices', invoice);
+            return response.data as Invoice;
+        } catch (error) {
+            console.error('Error creating invoice:', error);
+            throw error;
+        }
+    }
+
+    static async createInvoiceItem(invoiceItem: any): Promise<any> {
+        try {
+            const response = await api.post('/invoice-items', invoiceItem);
+            return response.data as any;
+        } catch (error) {
+            console.error('Error creating invoice item:', error);
             throw error;
         }
     }
