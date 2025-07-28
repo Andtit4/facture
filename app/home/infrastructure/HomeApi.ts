@@ -66,20 +66,20 @@ export class HomeApi implements IHomeRepository {
         }
     }
 
-      /* public id: number,
-        public invoice_number: string,
-        public status: string,
-        public total_amount: number,
-        public customer_id: number,
-        public issue_date: Date,
-        public due_date: Date, */
+    /* public id: number,
+      public invoice_number: string,
+      public status: string,
+      public total_amount: number,
+      public customer_id: number,
+      public issue_date: Date,
+      public due_date: Date, */
 
-     /*    public id: number,
-    public invoice_id: number,
-    public product_id: number,
-    public quantity: number,
-    public unit_price: number, */
-    
+    /*    public id: number,
+   public invoice_id: number,
+   public product_id: number,
+   public quantity: number,
+   public unit_price: number, */
+
     static async createInvoice(invoice: Invoice): Promise<Invoice> {
         try {
             const response = await api.post('/invoices', invoice);
@@ -96,6 +96,46 @@ export class HomeApi implements IHomeRepository {
             return response.data as any;
         } catch (error) {
             console.error('Error creating invoice item:', error);
+            throw error;
+        }
+    }
+
+    static async getTotalAmount() {
+        try {
+            const response = await api.get('/invoices/total-amount');
+            return response.data as number;
+        } catch (error) {
+            console.error('Error fetching total amount:', error);
+            throw error;
+        }
+    }
+
+    static async getNumberOfCustomers(): Promise<number> {
+        try {
+            const response = await api.get('/customers/number-customers');
+            return response.data as number;
+        } catch (error) {
+            console.error('Error fetching number of customers:', error);
+            throw error;
+        }
+    }
+
+    static async getNumberOfInvoices(): Promise<number> {
+        try {
+            const response = await api.get('/invoices/number-invoices');
+            return response.data as number;
+        } catch (error) {
+            console.error('Error fetching number of invoices:', error);
+            throw error;
+        }
+    }
+
+    static async getNumberStatusOfInvoice(status: string): Promise<number> {
+        try {
+            const response = await api.get(`/invoices/number-status/${status}`);
+            return response.data as number;
+        } catch (error) {
+            console.error(`Error fetching number of invoices with status ${status}:`, error);
             throw error;
         }
     }

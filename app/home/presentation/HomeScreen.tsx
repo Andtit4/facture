@@ -24,6 +24,8 @@ import { Invoice } from '../domain/model/Invoice';
 import { InvoiceItem } from '../domain/model/InvoiceItem';
 import CompleteInvoiceModal from './widgets/InvoiceModal';
 import ProductModal from './widgets/ProductModal';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Ionicons } from '@expo/vector-icons';
 const { width } = Dimensions.get('window');
 
 // Composant d'icône simple pour remplacer Lucide
@@ -34,7 +36,7 @@ const Icon = ({ name, size = 24, color = '#000' }) => {
         'users': '👥',
         'credit-card': '💳',
         'plus': '+',
-        'bell': '🔔',
+        'logout': '⍈',
         'search': '🔍',
         'settings': '⚙️',
         'chevron-right': '›',
@@ -59,7 +61,10 @@ export default function BillingApp() {
     const [modalInvoiceVisible, setModalInvoiceVisible] = useState(false);
     const [customers, setCustomers] = useState<any[]>([]);
     const [products, setProducts] = useState<any[]>([]);
-
+    const [totalAmount, setTotalAmount] = useState(0);
+    const [numberOfCustomers, setNumberOfCustomers] = useState(0);
+    const [numberOfInvoices, setNumberOfInvoices] = useState(0);
+    const [numberOfStatusInvoices, setNumberOfStatusInvoices] = useState(0);
     const [recentInvoices, setRecentInvoices] = useState<any[]>([]);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -71,7 +76,11 @@ export default function BillingApp() {
         await HomeApi.getInvoices().then(setRecentInvoices);
         await HomeApi.getCustomers().then(setCustomers);
         await HomeApi.getProducts().then(setProducts);
-        
+        await HomeApi.getTotalAmount().then(setTotalAmount);
+        await HomeApi.getNumberOfCustomers().then(setNumberOfCustomers);
+        await HomeApi.getNumberOfInvoices().then(setNumberOfInvoices);
+        await HomeApi.getNumberStatusOfInvoice('PAID').then(setNumberOfStatusInvoices);
+
         setRefreshing(false);
     }
 
@@ -219,29 +228,29 @@ const stats = [
     {
         icon: 'dollar-sign',
         label: 'Revenus ce mois',
-        value: '€12,450',
-        change: '+12%',
+        value: totalAmount,
+        change: '',
         color: '#10b981'
     },
     {
         icon: 'file-text',
         label: 'Factures créées',
-        value: '156',
-        change: '+8%',
+        value: numberOfInvoices,
+        change: '',
         color: '#3b82f6'
     },
     {
         icon: 'users',
         label: 'Clients actifs',
-        value: '89',
-        change: '+15%',
+        value: numberOfCustomers,
+        change: '',
         color: '#8b5cf6'
     },
     {
         icon: 'credit-card',
         label: 'Paiements reçus',
-        value: '142',
-        change: '+5%',
+        value: numberOfStatusInvoices,
+        change: '',
         color: '#f59e0b'
     }
 ];
@@ -382,21 +391,20 @@ return (
                     </View>
 
                     <View style={styles.headerActions}>
-                        <TouchableOpacity style={styles.searchContainer}>
+                        {/* <TouchableOpacity style={styles.searchContainer}>
                             <Icon name="search" size={16} color="#9ca3af" />
                             <TextInput
                                 placeholder="Rechercher..."
                                 style={styles.searchInput}
                                 placeholderTextColor="#9ca3af"
                             />
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
                         <TouchableOpacity onPress={() => {
-                            AsyncStorage.setItem('token', '').then(() => {
+                            AsyncStorage.setItem('token', 'null').then(() => {
                                 router.replace('/login/presentation/Login');
                             })
                         }} style={styles.notificationButton}>
-                            <Icon name="bell" size={20} color="#6b7280" />
-                            <View style={styles.notificationBadge} />
+                            <Icon name="logout" size={25} color="#6b7280" />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -575,19 +583,11 @@ const styles = StyleSheet.create({
     },
     notificationButton: {
         position: 'relative',
-        padding: 8,
+        padding: 9,
         backgroundColor: '#f3f4f6',
         borderRadius: 12,
     },
-    notificationBadge: {
-        position: 'absolute',
-        top: 6,
-        right: 6,
-        width: 8,
-        height: 8,
-        backgroundColor: '#ef4444',
-        borderRadius: 4,
-    },
+   
     scrollView: {
         flex: 1,
     },

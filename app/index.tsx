@@ -14,7 +14,7 @@ export default function Index() {
         fetchToken();
     }, []);
 
-    return token === '' || token === null
+    return token === 'null' 
         ? <Redirect href="/login/presentation/Login" />
         : <Redirect href="/home/presentation/HomeScreen" />;
 }
