@@ -1,29 +1,29 @@
 // App.js
+import User from '@/app/login/domain/entities/User';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    TextInput,
     Animated,
-    StyleSheet,
-    StatusBar,
-    SafeAreaView,
     Dimensions,
+    RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { HomeApi } from '../infrastructure/HomeApi';
-import User from '@/app/login/domain/entities/User';
 import ClientModal from './widgets/ClientModal';
-import * as Haptics from 'expo-haptics';
-import { RefreshControl } from 'react-native';
-import ProductModal from './widgets/ProductModal';
-import InvoiceModal from './widgets/InvoiceModal';
-import CompleteInvoiceModal from './widgets/InvoiceModal';
+
 import { Invoice } from '../domain/model/Invoice';
 import { InvoiceItem } from '../domain/model/InvoiceItem';
+import CompleteInvoiceModal from './widgets/InvoiceModal';
+import ProductModal from './widgets/ProductModal';
 const { width } = Dimensions.get('window');
 
 // Composant d'icône simple pour remplacer Lucide
@@ -69,6 +69,9 @@ export default function BillingApp() {
         setRefreshing(true);
         await HomeApi.getCurrentUser().then(setCurrentUser);
         await HomeApi.getInvoices().then(setRecentInvoices);
+        await HomeApi.getCustomers().then(setCustomers);
+        await HomeApi.getProducts().then(setProducts);
+        
         setRefreshing(false);
     }
 
@@ -464,8 +467,8 @@ return (
                                 <Text style={styles.seeAllButton}>Voir tout</Text>
                             </TouchableOpacity>
                         </View>
-
-                        <View style={styles.invoicesList}>
+                        <ScrollView >
+                            <View style={styles.invoicesList}>
                             {recentInvoices.map((invoice, index) => (
                                 <TouchableOpacity key={invoice.id} style={styles.invoiceItem}>
                                     <View style={styles.invoiceLeft}>
@@ -492,6 +495,8 @@ return (
                                 </TouchableOpacity>
                             ))}
                         </View>
+                        </ScrollView>
+                        
                     </View>
                 </Animated.View>
 
@@ -505,46 +510,11 @@ return (
                         },
                     ]}
                 >
-                    <View style={styles.chartCard}>
-                        <Text style={styles.sectionTitle}>Aperçu des revenus</Text>
-                        <View style={styles.chartContainer}>
-                            <View style={styles.chartBars}>
-                                {[40, 65, 45, 80, 55, 90, 70].map((height, index) => (
-                                    <Animated.View
-                                        key={index}
-                                        style={[
-                                            styles.chartBar,
-                                            {
-                                                height: `${height}%`,
-                                                opacity: fadeAnim,
-                                            }
-                                        ]}
-                                    />
-                                ))}
-                            </View>
-                        </View>
-                    </View>
+                    
                 </Animated.View>
 
                 {/* Bottom Navigation */}
-                <View style={styles.bottomNav}>
-                    <TouchableOpacity style={[styles.navItem, styles.navItemActive]}>
-                        <Icon name="bar-chart" size={20} color="#6366f1" />
-                        <Text style={[styles.navText, styles.navTextActive]}>Accueil</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.navItem}>
-                        <Icon name="file-text" size={20} color="#9ca3af" />
-                        <Text style={styles.navText}>Factures</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.navItem}>
-                        <Icon name="users" size={20} color="#9ca3af" />
-                        <Text style={styles.navText}>Clients</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.navItem}>
-                        <Icon name="settings" size={20} color="#9ca3af" />
-                        <Text style={styles.navText}>Profil</Text>
-                    </TouchableOpacity>
-                </View>
+                
             </ScrollView>
         </View>
     </SafeAreaView>
@@ -818,53 +788,9 @@ const styles = StyleSheet.create({
         paddingTop: 24,
         paddingBottom: 100,
     },
-    chartCard: {
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        borderRadius: 16,
-        padding: 20,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.2)',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    chartContainer: {
-        height: 120,
-        borderRadius: 12,
-        backgroundColor: '#f8fafc',
-        justifyContent: 'flex-end',
-        paddingHorizontal: 16,
-        paddingBottom: 16,
-    },
-    chartBars: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        justifyContent: 'space-around',
-        height: '100%',
-    },
-    chartBar: {
-        width: 8,
-        backgroundColor: '#6366f1',
-        borderRadius: 4,
-        minHeight: 20,
-    },
-    bottomNav: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
-        flexDirection: 'row',
-        paddingVertical: 8,
-        paddingHorizontal: 20,
-    },
+   
+   
+   
     navItem: {
         flex: 1,
         alignItems: 'center',

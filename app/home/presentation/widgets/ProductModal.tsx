@@ -71,7 +71,7 @@ const ProductModal = ({ visible, onClose, products, setProducts }) => {
                 </View>
                 <View style={styles.productInfo}>
                     <Text style={styles.productName}>{productName}</Text>
-                    <Text style={styles.productAmount}>{productAmount}€</Text>
+                    <Text style={styles.productAmount}>{productAmount} XOF</Text>
                     <Text style={styles.productDate}>Ajouté le {dateAdd ? new Date(dateAdd).toLocaleDateString('fr-FR') : ''}</Text>
                 </View>
                 <TouchableOpacity style={styles.actionButton}>
